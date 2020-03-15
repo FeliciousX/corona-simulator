@@ -55,7 +55,6 @@ function main ({ w, h, v, size, population, speed }) {
   const simulation = d3.forceSimulation(nodes)
     .velocityDecay(0)
     .alphaDecay(0)
-    .force('charge', d3.forceManyBody().strength(0))
     .force('wall', forceWall({ width: w, height: h }))
     .force('collision', bounceForce)
     .on('tick', ticked)
