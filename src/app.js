@@ -11,7 +11,20 @@ const healthMap = {
   [RECOVERED]: 'pink'
 }
 
-function main ({ w, h, v, size, population, speed }) {
+function main ({ w, h, size, population, speed }) {
+  function nodeFactory (override) {
+    return {
+      x: Math.round((w - size * 4) * Math.random() + size * 2),
+      y: Math.round((h - size * 4) * Math.random() + size * 2),
+      vx: Math.random() > .5 ? 1 : -1,
+      vy: Math.random() > .5 ? 1 : -1,
+      radius: size / 2,
+      status: HEALTHY,
+      tick: 0,
+      ...override
+    }
+  }
+
   const canvas = d3.select('body')
     .append('svg')
     .attr('class', 'canvas')
@@ -23,29 +36,14 @@ function main ({ w, h, v, size, population, speed }) {
     .attr('height', `${h}px`)
     .attr('fill', '#f3f3f3')
 
-  const healthy = d3.range(0, population - 1).map(id => ({
-    id,
-    x: Math.round((w - size * 4) * Math.random() + size * 2),
-    y: Math.round((h - size * 4) * Math.random() + size * 2),
-    vx: Math.random() > .5 ? 1 : -1,
-    vy: Math.random() > .5 ? 1 : -1,
-    radius: size / 2,
-    status: HEALTHY
-  }))
+  const healthy = d3.range(0, population - 1).map(id => nodeFactory({ id }))
 
-  const sick = {
-    id: healthy.length,
-    x: Math.round((w - size * 4) * Math.random() + size * 2),
-    y: Math.round((h - size * 4) * Math.random() + size * 2),
-    vx: Math.random() > .5 ? 1 : -1,
-    vy: Math.random() > .5 ? 1 : -1,
-    radius: size / 2,
-    status: SICK
-  }
+  const sick = nodeFactory({ id: healthy.length, status: SICK })
 
-  const nodes = healthy.concat([sick])
+  let nodes = healthy.concat([sick])
 
-  const bounceForce = forceBounce().radius(d => d.radius)
+  const bounceForce = forceBounce()
+    .radius(d => d.radius)
   bounceForce.onImpact((node1, node2) => {
     if (
       node1.status === SICK && node2.status === HEALTHY ||
@@ -61,6 +59,7 @@ function main ({ w, h, v, size, population, speed }) {
     .alphaDecay(0)
     .force('wall', forceWall({ width: w, height: h }))
     .force('collision', bounceForce)
+    .force('recover', forceRecover())
     .on('tick', ticked)
 
   const stop = d3.select('#stop')
@@ -80,6 +79,35 @@ function main ({ w, h, v, size, population, speed }) {
     humans.exit().remove()
   }
 
+}
+
+function forceRecover () {
+  let nodes = []
+
+  function force (alpha) {
+    nodes.forEach((d, index, obj) => {
+      if (d.status === SICK) {
+        d.tick = d.tick + 1
+
+        d.vx = d.vx * .995
+        d.vy = d.vy * .995
+
+        if (d.tick > 1000) {
+          if (Math.random() <= 0.04) {
+            obj.splice(index, 1)
+          } else {
+            d.status = RECOVERED
+          }
+        }
+      }
+    })
+  }
+
+  force.initialize = function (_) {
+    nodes = _
+  }
+
+  return force
 }
 
 function exceedRight (width, node) {
@@ -123,7 +151,6 @@ function forceWall ({ width, height }) {
 main({
   w: 800,
   h: 800,
-  v: 3,
   size: 20,
   population: 50,
   speed: 50
