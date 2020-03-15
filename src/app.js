@@ -3,10 +3,12 @@ import forceBounce from '/web_modules/d3-force-bounce.js'
 
 const HEALTHY = 0
 const SICK = 1
+const RECOVERED = 2
 
 const healthMap = {
-  [HEALTHY]: 'blue',
-  [SICK]: 'pink'
+  [HEALTHY]: 'teal',
+  [SICK]: 'brown',
+  [RECOVERED]: 'pink'
 }
 
 function main ({ w, h, v, size, population, speed }) {
@@ -45,11 +47,13 @@ function main ({ w, h, v, size, population, speed }) {
 
   const bounceForce = forceBounce().radius(d => d.radius)
   bounceForce.onImpact((node1, node2) => {
-    if (node1.status === SICK || node2.status === SICK) {
+    if (
+      node1.status === SICK && node2.status === HEALTHY ||
+      node2.status === SICK && node1.status === HEALTHY
+    ) {
       node1.status = SICK
       node2.status = SICK
     }
-
   })
 
   const simulation = d3.forceSimulation(nodes)
