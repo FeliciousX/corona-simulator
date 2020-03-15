@@ -49,13 +49,14 @@ function main ({ w, h, v, size, population, speed }) {
       node1.status = SICK
       node2.status = SICK
     }
+
   })
 
   const simulation = d3.forceSimulation(nodes)
     .velocityDecay(0)
     .alphaDecay(0)
     .force('charge', d3.forceManyBody().strength(0))
-    .force('wall', forceWall)
+    .force('wall', forceWall({ width: w, height: h }))
     .force('collision', bounceForce)
     .on('tick', ticked)
 
@@ -76,33 +77,44 @@ function main ({ w, h, v, size, population, speed }) {
     humans.exit().remove()
   }
 
-  function exceedRight (width, node) {
-    return node.vx + node.x >= width - node.radius
-  }
+}
 
-  function exceedLeft (node) {
-    return node.vx + node.x <= node.radius
-  }
+function exceedRight (width, node) {
+  return node.vx + node.x >= width - node.radius
+}
 
-  function exceedTop (node) {
-    return node.vy + node.y <= node.radius
-  }
+function exceedLeft (node) {
+  return node.vx + node.x <= node.radius
+}
 
-  function exceedBottom (height, node) {
-    return node.vy + node.y >= height - node.radius
-  }
+function exceedTop (node) {
+  return node.vy + node.y <= node.radius
+}
 
-  function forceWall (alpha) {
+function exceedBottom (height, node) {
+  return node.vy + node.y >= height - node.radius
+}
+
+function forceWall ({ width, height }) {
+  let nodes = []
+
+  function force () {
     nodes.forEach(d => {
-      if (exceedRight(w, d) || exceedLeft(d)) {
+      if (exceedRight(width, d) || exceedLeft(d)) {
         d.vx = d.vx * -1
       }
 
-      if (exceedTop(d) || exceedBottom(h, d)) {
+      if (exceedTop(d) || exceedBottom(height, d)) {
         d.vy = d.vy * -1
       }
     })
   }
+
+  force.initialize = function (_) {
+    nodes = _
+  }
+
+  return force
 }
 
 main({
