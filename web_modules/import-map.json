@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "d3": "./d3.js",
+    "d3-force-bounce": "./d3-force-bounce.js"
+  }
+}
