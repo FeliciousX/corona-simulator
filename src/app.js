@@ -1,5 +1,5 @@
-import * as d3 from './web_modules/d3.js'
-import forceBounce from './web_modules/d3-force-bounce.js'
+import * as d3 from '../web_modules/d3.js'
+import forceBounce from '../web_modules/d3-force-bounce.js'
 
 const HEALTHY = 0
 const SICK = 1
